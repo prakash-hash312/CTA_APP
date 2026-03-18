@@ -13,12 +13,18 @@ import '../services/api_services.dart';
 import 'Homeworkscreen.dart';
 import 'changepasswordscreen.dart';
 import 'login_screen.dart';
+import 'student_syllabus_screen.dart';
 
 
 // --- Helper for Navigation ---
 Widget _getScreen(BuildContext context, String title) {
+  final normalizedTitle = title
+      .toLowerCase()
+      .replaceAll(RegExp(r'[_-]+'), ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
   // 🟢 VIEW PROFILE
-  if (title.toLowerCase().contains('view my profile')) {
+  if (normalizedTitle.contains('view my profile')) {
     return FutureBuilder<UserProfile>(
       future: apiService.viewProfile(),
       builder: (context, snapshot) {
@@ -59,17 +65,23 @@ Widget _getScreen(BuildContext context, String title) {
   }
 
   // 🟣 HOMEWORK UPLOAD (Static call)
-  else if (title.toLowerCase().contains('homework upload')) {
+  else if (normalizedTitle.contains('homework upload')) {
     return const HomeWorkScreen();
   }
 
+  // 🟡 STUDENT SYLLABUS (Placeholder)
+  else if (normalizedTitle.contains('student syllabus')) {
+    return const StudentSyllabusScreen();
+  }
+
   // 🟡 CHANGE PASSWORD
-  else if (title.toLowerCase().contains('change password')) {
+  else if (normalizedTitle.contains('change password') ||
+      normalizedTitle.contains('student password change')) {
     return const ChangePasswordScreen();
   }
 
   // 🟠 MODIFY PROFILE
-  else if (title.toLowerCase().contains('modify my profile')) {
+  else if (normalizedTitle.contains('modify my profile')) {
     return FutureBuilder<UserProfile>(
       future: apiService.viewProfile(),
       builder: (context, snapshot) {
@@ -141,7 +153,9 @@ class _NavbarScreenState extends State<NavbarScreen> {
 
   Future<void> _fetchMenuList() async {
     try {
-      final items = await apiService.fetchMenuList();
+      final items = await apiService.fetchMenuList(
+        email: apiService.currentLoginEmail,
+      );
       // sort by provided menuOrder
       items.sort((a, b) => a.menuOrder.compareTo(b.menuOrder));
       setState(() {

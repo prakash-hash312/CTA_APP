@@ -18,9 +18,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _empIdController = TextEditingController();
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return; // 🚫 stop if invalid
@@ -39,6 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // 🧠 Call your API service login
       final UserProfile user = await apiService.login(username, password);
+      await apiService.fetchMenuList(email: username);
 
       if (!mounted) return;
 
