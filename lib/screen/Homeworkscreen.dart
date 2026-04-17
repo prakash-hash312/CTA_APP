@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../colors/app_color.dart';
 import '../services/api_services.dart';
 import 'homeworkdetailsscreen.dart';
 import 'navbar_screen.dart';
+import 'dart:developer';
 
 class HomeWorkScreen extends StatefulWidget {
   const HomeWorkScreen({super.key});
@@ -13,11 +16,107 @@ class HomeWorkScreen extends StatefulWidget {
 
 class _HomeWorkScreenState extends State<HomeWorkScreen> {
   late Future<List<Map<String, dynamic>>> _homeworkFuture;
+  final Dio _dio = Dio();
 
   @override
   void initState() {
     super.initState();
-    _homeworkFuture = apiService.fetchStudentHomeWork();
+    _homeworkFuture = _loadHomework();
+  }
+
+  Future<List<Map<String, dynamic>>> _loadHomework() async {
+    final prefs = await SharedPreferences.getInstance();
+    int? profileStudentId;
+
+    try {
+      final profile = await apiService.viewProfile();
+      if (profile.studentId > 0) {
+        profileStudentId = profile.studentId;
+      }
+    } catch (e) {
+      debugPrint('⚠️ Homework page could not resolve student id from profile: $e');
+    }
+
+    final candidateIds = <int>{
+      if ((profileStudentId ?? 0) > 0) profileStudentId!,
+      if ((apiService.currentStudentId ?? 0) > 0) apiService.currentStudentId!,
+      if ((prefs.getInt('stud_id') ?? 0) > 0) prefs.getInt('stud_id')!,
+      if ((apiService.currentUserId ?? 0) > 0) apiService.currentUserId!,
+      if ((prefs.getInt('user_id') ?? 0) > 0) prefs.getInt('user_id')!,
+    }.toList();
+
+    if (candidateIds.isEmpty) {
+      throw Exception('Student ID is not available for homework fetch');
+    }
+
+    final urls = <String>[
+      'https://www.ivpsemi.in/CTA_Mob/v1/StudentHomeWork',
+      'https://www.ivpsemi.in/CTA_Mob/v1/StudentHomework',
+    ];
+
+    String? lastMessage;
+    int? lastStatusCode;
+
+    for (final url in urls) {
+      for (final id in candidateIds) {
+        final queries = <Map<String, dynamic>>[
+          {'Stud_id': id},
+          {'stud_id': id},
+        ];
+
+        for (final query in queries) {
+          try {
+            debugPrint('📘 Homework page GET: $url');
+            debugPrint('🧾 Homework page params: $query');
+
+            final response = await _dio.get(
+              url,
+              queryParameters: query,
+              options: Options(
+                headers: {'Content-Type': 'application/json'},
+                validateStatus: (status) => status != null && status < 600,
+              ),
+            );
+
+            final data = response.data;
+            debugPrint('✅ Homework page response ${response.statusCode}: $data');
+            lastStatusCode = response.statusCode;
+
+            if (response.statusCode == 200 && data is List) {
+              return data.map((e) => Map<String, dynamic>.from(e)).toList();
+            }
+
+            if (response.statusCode == 204) {
+              return [];
+            }
+
+            if (data is Map<String, dynamic>) {
+              lastMessage = data['Message']?.toString() ??
+                  data['message']?.toString() ??
+                  'Server returned ${response.statusCode}';
+            } else {
+              lastMessage = 'Server returned ${response.statusCode}';
+            }
+          } catch (e) {
+            debugPrint('❌ Homework page fetch failed for $query: $e');
+            lastMessage = e.toString();
+          }
+        }
+      }
+    }
+
+    final normalized = (lastMessage ?? '').toLowerCase().trim();
+    if (lastStatusCode == 500 &&
+        (normalized.isEmpty ||
+            normalized == 'an error has occurred.' ||
+            normalized == 'an error has occurred')) {
+      debugPrint(
+        '⚠️ Homework page fallback: generic server 500 for ids=$candidateIds, showing empty state.',
+      );
+      return [];
+    }
+
+    throw Exception(lastMessage ?? 'Failed to fetch homework');
   }
 
   Widget _buildDetailRow(String label, String value, {bool isRed = false}) {
@@ -38,9 +137,6 @@ class _HomeWorkScreenState extends State<HomeWorkScreen> {
               ),
             ),
           ),
-
-
-
           // VALUE COLUMN
           Expanded(
             child: Text(
@@ -83,8 +179,9 @@ class _HomeWorkScreenState extends State<HomeWorkScreen> {
         body: RefreshIndicator(
           onRefresh: () async {
             setState(() {
-              _homeworkFuture = apiService.fetchStudentHomeWork();
+              _homeworkFuture = _loadHomework();
             });
+            await _homeworkFuture;
           },
           child: FutureBuilder<List<Map<String, dynamic>>>(
             future: _homeworkFuture,

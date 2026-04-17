@@ -4,6 +4,7 @@
 class UserProfile {
   // 🧩 Common Fields
   final int userId;
+  final int studentId;
   final String userName;
   final String firstName;
   final String lastName;
@@ -40,6 +41,7 @@ class UserProfile {
   // 🏗️ Constructor
   UserProfile({
     required this.userId,
+    this.studentId = 0,
     required this.userName,
     this.firstName = '',
     this.lastName = '',
@@ -72,10 +74,27 @@ class UserProfile {
 
   // 🧩 Factory Constructor (fromJson)
   factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final resolvedStudentId = json['stud_id'] is int
+        ? json['stud_id']
+        : json['student_id'] is int
+        ? json['student_id']
+        : json['StudId'] is int
+        ? json['StudId']
+        : json['StudentId'] is int
+        ? json['StudentId']
+        : int.tryParse(
+        json['stud_id']?.toString() ??
+            json['student_id']?.toString() ??
+            json['StudId']?.toString() ??
+            json['StudentId']?.toString() ??
+            '0') ??
+        0;
+
     return UserProfile(
       userId: json['user_id'] is int
           ? json['user_id']
           : int.tryParse(json['user_id']?.toString() ?? '0') ?? 0,
+      studentId: resolvedStudentId,
       userName: json['user_name']?.toString() ?? '',
       firstName: json['first_name']?.toString() ?? '',
       lastName: json['last_name']?.toString() ?? '',
@@ -117,6 +136,7 @@ class UserProfile {
   Map<String, dynamic> toJson() {
     return {
       'user_id': userId,
+      'stud_id': studentId,
       'user_name': userName,
       'first_name': firstName,
       'last_name': lastName,
@@ -151,6 +171,7 @@ class UserProfile {
   // 🧩 copyWith() for partial updates
   UserProfile copyWith({
     int? userId,
+    int? studentId,
     String? userName,
     String? firstName,
     String? lastName,
@@ -165,6 +186,7 @@ class UserProfile {
   }) {
     return UserProfile(
       userId: userId ?? this.userId,
+      studentId: studentId ?? this.studentId,
       userName: userName ?? this.userName,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,

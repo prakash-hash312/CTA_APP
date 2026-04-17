@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/api_services.dart';
@@ -90,22 +91,28 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
     try {
       // Resolve the actual student ID from user session instead of using hardcoded value
       final resolvedStudId = await apiService.ensureCurrentStudentId();
-      final gradeRows = await apiService.fetchSyllabusGradeInfo(studId: resolvedStudId ?? apiService.currentUserId ?? 28410);
+      final gradeRows = await apiService.fetchSyllabusGradeInfo(studId: resolvedStudId ?? apiService.currentStudentId ?? 28410);
+      debugPrint('📚 GradeInfo Response: $gradeRows');
       if (gradeRows.isNotEmpty) {
         final g = _pickGrade5(gradeRows) ?? gradeRows.first;
-        _mainId = int.tryParse('${g['MainTopicID'] ?? 1013}') ?? 1013;
-        _gradeTitle = (g['Title'] ?? 'Grade 5 - Student').toString();
+        debugPrint('📚 Selected Grade Row: $g');
+        _mainId = int.tryParse('${g['MainTopicID'] ?? g['main_topic_id'] ?? 1013}') ?? 1013;
+        _gradeTitle = (g['Title'] ?? g['title'] ?? 'Grade 5 - Student').toString();
+        debugPrint('📚 MainId: $_mainId, GradeTitle: $_gradeTitle');
       }
 
       final topicRows = await apiService.fetchSyllabusTopicInfo(mainId: _mainId);
+      debugPrint('📚 TopicInfo Response: $topicRows');
       final topics = <_Topic>[];
 
       for (final t in topicRows) {
-        final topicId = int.tryParse('${t['SubTopicID'] ?? 0}') ?? 0;
-        final topicTitle = (t['Title'] ?? 'Untitled').toString();
+        final topicId = int.tryParse('${t['SubTopicID'] ?? t['sub_topic_id'] ?? t['ID'] ?? t['id'] ?? 0}') ?? 0;
+        final topicTitle = (t['Title'] ?? t['title'] ?? 'Untitled').toString();
+        debugPrint('📚 Processing Topic: ID=$topicId, Title=$topicTitle');
 
         // 1) Try direct content list under this topic_id
         final directContent = await apiService.fetchSyllabusContent(subtopicId: topicId);
+        debugPrint('📚 Direct Content for topic $topicId: ${directContent.length} items');
         final mappedDirect = directContent.map((e) => _mapContentRow(e)).toList();
 
         List<_Lesson> lessons;
@@ -115,9 +122,10 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
         } else {
           // 2) Fallback to SubTopicInfo list; each subtopic can be fetched on select.
           final subRows = await apiService.fetchSyllabusSubTopicInfo(topicId: topicId);
+          debugPrint('📚 SubTopicInfo for topic $topicId: ${subRows.length} items');
           lessons = subRows.map((s) {
-            final sid = int.tryParse('${s['SubSubTopicID'] ?? 0}') ?? 0;
-            final stitle = (s['Title'] ?? 'Untitled').toString();
+            final sid = int.tryParse('${s['SubSubTopicID'] ?? s['sub_sub_topic_id'] ?? s['ID'] ?? s['id'] ?? 0}') ?? 0;
+            final stitle = (s['Title'] ?? s['title'] ?? 'Untitled').toString();
             return _Lesson(
               id: sid,
               title: stitle,
@@ -171,13 +179,15 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
   }
 
   _Lesson _mapContentRow(Map<String, dynamic> row) {
-    final id = int.tryParse('${row['SubSubTopicID'] ?? 0}') ?? 0;
-    final title = (row['Title'] ?? 'Untitled').toString();
-    final type = (row['ContentType'] ?? 'content').toString().toLowerCase();
-    final html = (row['ContentHtml'] ?? '').toString();
-    final rendered = (row['RenderedContent'] ?? '').toString();
-    final iframe = (row['IframeUrl'] ?? '').toString();
-    final fileName = (row['FileName'] ?? '').toString();
+    final id = int.tryParse('${row['SubSubTopicID'] ?? row['sub_sub_topic_id'] ?? row['ID'] ?? row['id'] ?? 0}') ?? 0;
+    final title = (row['Title'] ?? row['title'] ?? 'Untitled').toString();
+    final type = (row['ContentType'] ?? row['content_type'] ?? 'content').toString().toLowerCase();
+    final html = (row['ContentHtml'] ?? row['content_html'] ?? '').toString();
+    final rendered = (row['RenderedContent'] ?? row['rendered_content'] ?? '').toString();
+    final iframe = (row['IframeUrl'] ?? row['iframe_url'] ?? '').toString();
+    final fileName = (row['FileName'] ?? row['file_name'] ?? '').toString();
+
+    debugPrint('📄 Mapping Content: ID=$id, Title=$title, Type=$type');
 
     String? primary;
     String? alt;

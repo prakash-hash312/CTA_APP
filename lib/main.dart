@@ -7,7 +7,10 @@ import 'package:provider/provider.dart';
 import 'colors/app_color.dart';
 import 'models/uploads_provider.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await apiService.loadSession();
+
   runApp(ChangeNotifierProvider(
     create: (_) => UploadsProvider(),
     child: const MyApp(),
@@ -58,9 +61,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: apiService.isLoggedIn
-          ? HomeScreen(userName: apiService.currentUsername ?? '')
-          :LoginScreen(),
+      home: LoginScreen(),
 
     );
   }
