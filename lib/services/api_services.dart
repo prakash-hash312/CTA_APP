@@ -11,17 +11,16 @@ import '../models/dropdownmodel.dart';
 import '../models/usermodel.dart'; // âœ… use the final UserProfile model name you saved earlier
 
 // --- API ENDPOINTS ---
-const String kBaseUrl = 'https://www.ivpsemi.in/CTA_Mob/v1';
-const String kLoginUrl = '$kBaseUrl/Login';
-const String kViewProfileUrl = '$kBaseUrl/ViewProfile';
-const String kModifyProfileUrl = '$kBaseUrl/ModifyProfile';
-const String kChangePasswordUrl = '$kBaseUrl/ChangePassword';
-const String kMenuUrl = '$kBaseUrl/Menu';
-const String kThemeListUrl = '$kBaseUrl/Theme';
-const String kGenderListUrl = '$kBaseUrl/Gender';
-const String kStateListUrl = '$kBaseUrl/State';
-const String kStudentHomeworkUrl = '$kBaseUrl/StudentHomework';
-const String kStudentHomeWorkUrl = '$kBaseUrl/StudentHomeWork';
+const String _kBaseUrl = 'https://www.ivpsemi.in/CTA_Mob/v1';
+const String kLoginUrl = '$_kBaseUrl/Login';
+const String kViewProfileUrl = '$_kBaseUrl/ViewProfile';
+const String kModifyProfileUrl = '$_kBaseUrl/ModifyProfile';
+const String kChangePasswordUrl = '$_kBaseUrl/ChangePassword';
+const String kMenuUrl = '$_kBaseUrl/Menu';
+const String kThemeListUrl = '$_kBaseUrl/Theme';
+const String kGenderListUrl = '$_kBaseUrl/Gender';
+const String kStateListUrl = '$_kBaseUrl/State';
+const String kStudentHomeWorkUrl = '$_kBaseUrl/StudentHomeWork';
 const String kSyllabusHwBaseUrl = 'https://www.ivpsemi.in/CTA_Mob/api/HW';
 
 class ApiService {
@@ -55,10 +54,16 @@ class ApiService {
   }
 
   bool get isLoggedIn => _currentUserId != null;
-  String? get currentUsername => _currentUsername; // âœ… getter
+  String? get currentUsername => _currentUsername; // ✅ getter
   String? get currentLoginEmail => _currentLoginEmail;
-  // ----------------- COMMON HELPERS -----------------
-  void setCurrentUserId(int userId) => _currentUserId = userId;
+  // -----------------  COMMON HELPERS -----------------
+  void setCurrentUserId(int userId) {
+    // Clear student ID when user changes to force re-resolution
+    if (_currentUserId != userId) {
+      _currentStudId = null;
+    }
+    _currentUserId = userId;
+  }
 
   void setCurrentEmpId(int? empId) => _currentEmpId = empId;
 
@@ -81,7 +86,7 @@ class ApiService {
   //   }
   // }
 
-  // âœ… Load user session on app start
+  // ✅ Load user session on app start
   Future<void> _saveSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('user_id', _currentUserId ?? 0);
@@ -103,7 +108,7 @@ class ApiService {
     final savedCookie = prefs.getString('cookie');
     if (savedToken != null && savedToken.isNotEmpty) setAuthToken(savedToken);
     if (savedCookie != null && savedCookie.isNotEmpty) setCookieHeader(savedCookie);
-    debugPrint('ðŸ”¹ Session loaded: user_id=$_currentUserId, username=$_currentUsername');
+    debugPrint('🔹 Session loaded: user_id=$_currentUserId, username=$_currentUsername');
   }
 
   Future<void> logout() async {
@@ -114,36 +119,47 @@ class ApiService {
     _currentStudId = null;
     _currentUsername = null;
     _currentLoginEmail = null;
-    debugPrint('ðŸšª User logged out. Session cleared.');
+    debugPrint('🚪 User logged out. Session cleared.');
   }
   /// Resolve and persist the student id used by syllabus endpoints.
   Future<int?> ensureCurrentStudentId() async {
-    if (_currentStudId != null && _currentStudId! > 0) return _currentStudId;
-    if (_currentUserId == null || _currentUserId! <= 0) return null;
+    if (_currentStudId != null && _currentStudId! > 0) {
+      debugPrint('✅ Student ID already set: $_currentStudId');
+      return _currentStudId;
+    }
+    if (_currentUserId == null || _currentUserId! <= 0) {
+      debugPrint('❌ No current user ID available');
+      return null;
+    }
 
     try {
+      debugPrint('🔄 Resolving Student ID for User: $_currentUserId');
       final rows = await fetchStudentHomeWork(studId: _currentUserId);
+      debugPrint('📦 Got ${rows.length} rows from StudentHomeWork');
       for (final row in rows) {
-        final sid = int.tryParse('${row['stud_id'] ?? 0}') ?? 0;
+        debugPrint('  Row: $row');
+        // Try multiple key variations to resolve the real Student ID
+        final sid = int.tryParse('${row['stud_id'] ?? row['Stud_id'] ?? 0}') ?? 0;
         if (sid > 0) {
+          debugPrint('✅ Found student ID: $sid');
           _currentStudId = sid;
           await _saveSession();
           return _currentStudId;
         }
       }
-    } catch (_) {
-      // Fallback below.
+    } catch (e) {
+      debugPrint('⚠️ Error resolving student ID: $e');
     }
-
+    
+    // Use the logged-in user ID as the fallback
     _currentStudId = _currentUserId;
-    await _saveSession();
     return _currentStudId;
   }
   Future<Response> _getResponse(String url,
       {Map<String, dynamic>? queryParameters}) async {
     try {
-      debugPrint('?? GET Request: $url');
-      debugPrint('?? Query Params: $queryParameters');
+      debugPrint('🌍 GET Request: $url');
+      debugPrint('🔎 Query Params: $queryParameters');
 
       final response = await _dio.get(
         url,
@@ -155,11 +171,11 @@ class ApiService {
         ),
       );
 
-      debugPrint('? Response Code: ${response.statusCode}');
-      debugPrint('? Response Data: ${response.data}');
+      debugPrint('✅ Response Code: ${response.statusCode}');
+      debugPrint('✅ Response Data: ${response.data}');
       return response;
     } on DioException catch (e) {
-      debugPrint('? Dio GET Error on $url: ${e.message}');
+      debugPrint('❌ Dio GET Error on $url: ${e.message}');
       if (e.response != null) debugPrint('Response: ${e.response}');
       throw Exception('Failed to load data: ${e.message}');
     }
@@ -168,8 +184,8 @@ class ApiService {
   Future<dynamic> _get(String url,
       {Map<String, dynamic>? queryParameters}) async {
     try {
-      debugPrint('ðŸŒ GET Request: $url');
-      debugPrint('ðŸ§¾ Query Params: $queryParameters');
+      debugPrint('🌍 GET Request: $url');
+      debugPrint('🔎 Query Params: $queryParameters');
 
       final response = await _dio.get(
         url,
@@ -181,11 +197,11 @@ class ApiService {
         ),
       );
 
-      debugPrint('âœ… Response Code: ${response.statusCode}');
-      debugPrint('âœ… Response Data: ${response.data}');
+      debugPrint('✅ Response Code: ${response.statusCode}');
+      debugPrint('✅ Response Data: ${response.data}');
       return response.data;
     } on DioException catch (e) {
-      debugPrint('âŒ Dio GET Error on $url: ${e.message}');
+      debugPrint('❌ Dio GET Error on $url: ${e.message}');
       if (e.response != null) debugPrint('Response: ${e.response}');
       throw Exception('Failed to load data: ${e.message}');
     }
@@ -207,14 +223,13 @@ class ApiService {
       debugPrint(
           'POST Error on $url: ${e.response?.statusCode} - ${e.message}');
       throw Exception(
-          'Failed to process request: ${e.response?.data?['message'] ??
-              e.message}');
+          'Failed to process request: ${e.response?.data?['message'] ?? e.message}');
     }
   }
 
   // ----------------- API CALLS -----------------
 
-  /// 1ï¸âƒ£ LOGIN (GET)
+  /// 1️⃣ LOGIN (GET)
   Future<UserProfile> login(String username, String password) async {
     final responseData = await _get(kLoginUrl, queryParameters: {
       'empno': username,
@@ -225,33 +240,35 @@ class ApiService {
       final user = UserProfile.fromJson(responseData[0]);
       setCurrentUserId(user.userId);
       _currentEmpId = user.userId;
-      _currentUsername = user.userName ?? username; // âœ… Save username
+      _currentUsername = user.userName ?? username; // ✅ Save username
       _currentLoginEmail =
           user.userEmailId.isNotEmpty ? user.userEmailId : username;
+      // ✅ RESET student ID to force resolution for new user
+      _currentStudId = null;
       await ensureCurrentStudentId();
 
-      // âœ… Save login details
+      // ✅ Save login details
       await _saveSession();
       return user;
     }
     throw Exception('Login failed: invalid credentials or empty response.');
   }
 
-  /// 2ï¸âƒ£ VIEW PROFILE (GET)
+  /// 2️⃣ VIEW PROFILE (GET)
   Future<UserProfile> viewProfile() async {
     if (_currentUserId == null) throw Exception('User not logged in.');
     if (_currentLoginEmail == null || _currentLoginEmail!.isEmpty) {
       throw Exception('Login email not available for ViewProfile API.');
     }
-    // ðŸ’¡ Add this line
-    debugPrint('ðŸ”¹ Fetching profile for empid=$_currentUserId');
+    // 💡 Add this line
+    debugPrint('🔹 Fetching profile for empid=$_currentUserId');
 
     final responseData = await _get(kViewProfileUrl, queryParameters: {
-      'empid': _currentUserId, // âœ… correct param as per your API
+      'empid': _currentUserId, // ✅ correct param as per your API
       'email': _currentLoginEmail,
     });
 
-    debugPrint('âœ… Response: $responseData');
+    debugPrint('✅ Response: $responseData');
 
     if (responseData is List && responseData.isNotEmpty) {
       return UserProfile.fromJson(responseData[0]);
@@ -259,7 +276,7 @@ class ApiService {
     throw Exception('Failed to load profile data.');
   }
 
-  /// 3ï¸âƒ£ MODIFY PROFILE (POST)
+  /// 3️⃣ MODIFY PROFILE (POST)
   Future<String> modifyProfile(Map<String, dynamic> requestData) async {
     if (_currentUserId == null) throw Exception('User not logged in.');
     requestData['user_id'] = _currentUserId;
@@ -272,7 +289,7 @@ class ApiService {
     throw Exception('Profile update failed: ${response['message']}');
   }
 
-  /// 4ï¸âƒ£ CHANGE PASSWORD (POST)
+  /// 4️⃣ CHANGE PASSWORD (POST)
   Future<String> changePassword(String newPwd,
       String confirmPwd,
       String oldPwd,) async {
@@ -282,18 +299,18 @@ class ApiService {
       "new_pwd": newPwd,
       "confirm_pwd": confirmPwd,
       "old_pwd": oldPwd,
-      "is_parent2": "No", // âœ… matches your backend (Postman version)
+      "is_parent2": "No", // ✅ matches your backend (Postman version)
       "user_id": _currentUserId,
     };
 
     try {
-      debugPrint('ðŸ” Sending change password request...');
+      debugPrint('🔑 Sending change password request...');
 
       final response = await _post(kChangePasswordUrl, requestData);
 
-      debugPrint('âœ… Password API response: $response');
+      debugPrint('✅ Password API response: $response');
 
-      // âœ… Safely parse response regardless of format
+      // ✅ Safely parse response regardless of format
       if (response is Map<String, dynamic>) {
         if (response['success'] == true ||
             response['Success'] == true) {
@@ -310,7 +327,7 @@ class ApiService {
         throw Exception('Unexpected response format from server.');
       }
     } on Exception catch (e) {
-      // âœ… Handle 404, network, timeout gracefully
+      // ✅ Handle 404, network, timeout gracefully
       final err = e.toString();
       if (err.contains('404')) {
         throw Exception(
@@ -326,7 +343,7 @@ class ApiService {
   }
 
 
-  /// 5ï¸âƒ£ MENU LIST (GET)
+  /// 5️⃣ MENU LIST (GET)
   Future<List<MenuItem>> fetchMenuList({String? email}) async {
     final empId = _currentEmpId ?? _currentUserId;
     if (empId == null) throw Exception('User not logged in.');
@@ -347,7 +364,7 @@ class ApiService {
     return [];
   }
 
-  /// 6ï¸âƒ£ THEME LIST (GET)
+  /// 6️⃣ THEME LIST (GET)
   Future<List<ThemeItem>> fetchThemeList() async {
     final responseData = await _get(kThemeListUrl);
     if (responseData is List) {
@@ -356,7 +373,7 @@ class ApiService {
     return [];
   }
 
-  /// 7ï¸âƒ£ GENDER LIST (GET)
+  /// 7️⃣ GENDER LIST (GET)
   Future<List<GenderItem>> fetchGenderList() async {
     final responseData = await _get(kGenderListUrl);
     if (responseData is List) {
@@ -365,7 +382,7 @@ class ApiService {
     return [];
   }
 
-  /// 8ï¸âƒ£ STATE LIST (GET)
+  /// 8️⃣ STATE LIST (GET)
   Future<List<StateItem>> fetchStateList() async {
     final responseData = await _get(kStateListUrl);
     if (responseData is List) {
@@ -374,34 +391,42 @@ class ApiService {
     return [];
   }
 
-  /// 9ï¸âƒ£ STATIC HOMEWORK API (no user_id or login dependency)
-  /// 9ï¸âƒ£ STATIC HOMEWORK API (No login or user dependency)
+  /// 9️⃣ STATIC HOMEWORK API (no user_id or login dependency)
+  /// 9️⃣ STATIC HOMEWORK API (No login or user dependency)
   Future<List<Map<String, dynamic>>> fetchStudentHomeWork({int? studId}) async {
-    const String url = 'https://www.ivpsemi.in/CTA_Mob/v1/StudentHomeWork';
-    final resolvedStudId = studId ?? _currentStudId ?? _currentUserId ?? 19233;
+    const String url = kStudentHomeWorkUrl;
+    // Priority: 1. Passed ID, 2. Resolved Student ID, 3. Logged-in User ID
+    final int? resolvedStudId = studId ?? _currentStudId ?? _currentUserId;
+    
+    debugPrint('📓 [fetchStudentHomeWork] START - Resolved ID: $resolvedStudId (Source: ${studId != null ? "Argument" : _currentStudId != null ? "Resolved Cache" : "User ID"})');
+
+    if (resolvedStudId == null) {
+      debugPrint('⚠️ [fetchStudentHomeWork] ABORTED: No valid ID available');
+      return [];
+    }
 
     try {
       final responseData = await _get(
         url,
-        queryParameters: {'Stud_id': resolvedStudId},
+        queryParameters: {'stud_id': resolvedStudId}, // Using 'stud_id' for better dynamic compatibility
       );
 
-      debugPrint('ðŸ“˜ Homework API response: $responseData');
-
       if (responseData is List) {
+        debugPrint('✅ [fetchStudentHomeWork] SUCCESS: Received ${responseData.length} items');
         // Ensure every element is a Map<String, dynamic>
         return responseData.map((e) => Map<String, dynamic>.from(e)).toList();
       } else {
-        debugPrint('âš ï¸ Unexpected API format: $responseData');
+        debugPrint('⚠️ [fetchStudentHomeWork] UNEXPECTED FORMAT: Expected List, got ${responseData.runtimeType}');
+        debugPrint('📄 Raw Data: $responseData');
         return [];
       }
     } catch (e) {
-      debugPrint('âŒ Homework fetch error: $e');
+      debugPrint('❌ Homework fetch error: $e');
       throw Exception('Failed to fetch homework');
     }
   }
 
-  /// 10ï¸âƒ£ SYLLABUS GRADE INFO (GET)
+  /// 🔟 SYLLABUS GRADE INFO (GET)
   Future<List<Map<String, dynamic>>> fetchSyllabusGradeInfo({
     required int studId,
   }) async {
@@ -413,7 +438,7 @@ class ApiService {
     return [];
   }
 
-  /// 11ï¸âƒ£ SYLLABUS TOPIC INFO (GET)
+  /// 1️⃣1️⃣ SYLLABUS TOPIC INFO (GET)
   Future<List<Map<String, dynamic>>> fetchSyllabusTopicInfo({
     required int mainId,
   }) async {
@@ -425,7 +450,7 @@ class ApiService {
     return [];
   }
 
-  /// 12ï¸âƒ£ SYLLABUS SUBTOPIC INFO (GET)
+  /// 1️⃣2️⃣ SYLLABUS SUBTOPIC INFO (GET)
   Future<List<Map<String, dynamic>>> fetchSyllabusSubTopicInfo({
     required int topicId,
   }) async {
@@ -436,23 +461,26 @@ class ApiService {
     }
     return [];
   }
-
-  /// 13ï¸âƒ£ SYLLABUS CONTENT (GET)
-  Future<List<Map<String, dynamic>>> fetchSyllabusContent({
-    required int subtopicId,
-  }) async {
-    const String url = '$kSyllabusHwBaseUrl/Content';
-    final responseData = await _get(
-      url,
-      queryParameters: {'SubSubTopicID': subtopicId},
-    );
-    if (responseData is List) {
-      return responseData.map((e) => Map<String, dynamic>.from(e)).toList();
-    }
-    return [];
+/// 1️⃣3️⃣ SYLLABUS CONTENT (GET)
+Future<List<Map<String, dynamic>>> fetchSyllabusContent({
+  required int subtopicId,
+}) async {
+  debugPrint('📘 [fetchSyllabusContent] Requesting content for ID: $subtopicId');
+  const String url = '$kSyllabusHwBaseUrl/Content';
+  final responseData = await _get(
+    url,
+    queryParameters: {
+      'Subtopic_id': subtopicId,
+      '_cacheBust': DateTime.now().millisecondsSinceEpoch, // Ensures real-time content
+    },
+  );
+  if (responseData is List) {
+    return responseData.map((e) => Map<String, dynamic>.from(e)).toList();
   }
+  return [];
+}
 
-  /// ðŸ”Ÿ HOMEWORK DETAIL API
+  /// 🔟 HOMEWORK DETAIL API
   Future<List<Map<String, dynamic>>> fetchHomeworkDetail({
     required int hwContentId,
     required String hwType,
@@ -464,22 +492,22 @@ class ApiService {
         'hw_type': hwType,
       });
 
-      debugPrint('ðŸ“˜ Homework Detail API response: $responseData');
+      debugPrint('📓 Homework Detail API response: $responseData');
 
       if (responseData is List) {
         return responseData.map((e) => Map<String, dynamic>.from(e)).toList();
       } else {
-        debugPrint('âš ï¸ Unexpected detail format: $responseData');
+        debugPrint('⚠️ Unexpected detail format: $responseData');
         return [];
       }
     } catch (e) {
-      debugPrint('âŒ Homework detail fetch error: $e');
+      debugPrint('❌ Homework detail fetch error: $e');
       throw Exception('Failed to fetch homework details');
     }
   }
 
 
-  /// ðŸ§© UPLOAD HOMEWORK FILES
+  /// 🧩 UPLOAD HOMEWORK FILES
   Future<Map<String, dynamic>> uploadHomeworkFiles({
     required int studentId,
     required int batch,
@@ -513,9 +541,9 @@ class ApiService {
         MapEntry('HomeworkType', homeworkType.trim()),
       ]);
 
-      debugPrint('ðŸ“¤ Uploading files â†’ $url');
-      debugPrint('ðŸ§¾ Fields: ${formData.fields}');
-      debugPrint('ðŸ“¦ Files count: ${files.length}');
+      debugPrint('📤 Uploading files → $url');
+      debugPrint('🔎 Fields: ${formData.fields}');
+      debugPrint('📦 Files count: ${files.length}');
 
       final response = await _dio.post(
         url,
@@ -524,34 +552,34 @@ class ApiService {
         onSendProgress: (sent, total) {
           if (total > 0) {
             final progress = (sent / total * 100).toStringAsFixed(1);
-            debugPrint('â³ Upload progress: $progress%');
+            debugPrint('⏳ Upload progress: $progress%');
           }
         },
       );
 
-      debugPrint('âœ… Upload Response: ${response.data}');
+      debugPrint('✅ Upload Response: ${response.data}');
       if (response.statusCode == 200 && response.data['success'] == true) {
         return response.data;
       } else {
         throw Exception(response.data['message'] ?? 'Upload failed.');
       }
     } catch (e) {
-      debugPrint('âŒ Upload error: $e');
+      debugPrint('❌ Upload error: $e');
       throw Exception('Failed to upload files: $e');
     }
   }
 
 
-  /// ðŸ§¾ GET UPLOADED HOMEWORK FILES
+  /// 🔎 GET UPLOADED HOMEWORK FILES
   Future<List<Map<String, dynamic>>> fetchUploadedHomeworkFiles({
     required int hwAssignId,
     required String hwType,
   }) async {
     const String baseUrl = 'https://www.ivpsemi.in/CTA_Mob/v1/GetHwUploadedFiles';
     try {
-      debugPrint('ðŸ“¥ [GetUploadedFiles] Fetching uploaded files...');
-      debugPrint('ðŸ”¹ hw_assign_id: $hwAssignId');
-      debugPrint('ðŸ”¹ hw_type: $hwType');
+      debugPrint('📥 [GetUploadedFiles] Fetching uploaded files...');
+      debugPrint('🔹 hw_assign_id: $hwAssignId');
+      debugPrint('🔹 hw_type: $hwType');
 
 
       final response = await _dio.get(
@@ -566,21 +594,50 @@ class ApiService {
         ),
       );
 
-      debugPrint('ðŸ“¥ [GetUploadedFiles] Status: ${response.statusCode}');
-      debugPrint('ðŸ“¥ [GetUploadedFiles] Response: ${response.data}');
+      debugPrint('📥 [GetUploadedFiles] Status: ${response.statusCode}');
+      debugPrint('📥 [GetUploadedFiles] Response: ${response.data}');
 
-      if (response.statusCode == 200 && response.data is List) {
-        debugPrint(
-            'âœ… [GetUploadedFiles] Files received: ${response.data.length}');
-        return List<Map<String, dynamic>>.from(response.data);
+      if (response.statusCode == 200) {
+        if (response.data is List) {
+          debugPrint(
+              '✅ [GetUploadedFiles] Files received: ${response.data.length}');
+          return List<Map<String, dynamic>>.from(response.data);
+        }
+
+        if (response.data is Map<String, dynamic>) {
+          final data = Map<String, dynamic>.from(response.data);
+          final listSection = data['data'] ??
+              data['files'] ??
+              data['uploadedFiles'] ??
+              data['result'];
+
+          if (listSection is List) {
+            final files = listSection
+                .whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList();
+            debugPrint('✅ [GetUploadedFiles] Files received: ${files.length}');
+            return files;
+          }
+
+          if (data['success'] == true) {
+            return [];
+          }
+
+          throw Exception(data['message'] ?? 'Unexpected response format');
+        }
       } else if (response.statusCode == 204) {
-        debugPrint('â„¹ï¸ [GetUploadedFiles] No files found for this homework.');
+        debugPrint('ℹ️ [GetUploadedFiles] No files found for this homework.');
         return [];
-      } else {
-        throw Exception(response.data['message'] ?? 'Unknown error');
       }
+
+      throw Exception(
+        response.data is Map<String, dynamic>
+            ? response.data['message'] ?? 'Unknown error'
+            : 'Unknown error',
+      );
     } catch (e) {
-      debugPrint('âŒ [GetUploadedFiles] Error: $e');
+      debugPrint('❌ [GetUploadedFiles] Error: $e');
       throw Exception('Failed to fetch uploaded homework files: $e');
     }
   }
@@ -606,22 +663,22 @@ class ApiService {
       "UploadedFiles": uploadedFiles.map((f) => {"FileName": f}).toList(),
     };
 
-    debugPrint('ðŸ“ [DraftHomework] Sending draft...');
-    debugPrint('ðŸ“¦ Data: $data');
+    debugPrint('📝 [DraftHomework] Sending draft...');
+    debugPrint('📦 Data: $data');
 
     try {
       final response = await _post(url, data);
-      debugPrint('âœ… [DraftHomework] Response: $response');
+      debugPrint('✅ [DraftHomework] Response: $response');
 
       if (response['success'] == true) {
-        debugPrint('âœ… [DraftHomework] Draft saved successfully.');
+        debugPrint('✅ [DraftHomework] Draft saved successfully.');
         return response['message'] ?? 'Draft saved successfully!';
       } else {
-        debugPrint('âŒ [DraftHomework] Failed: ${response['message']}');
+        debugPrint('❌ [DraftHomework] Failed: ${response['message']}');
         throw Exception(response['message'] ?? 'Failed to draft homework.');
       }
     } catch (e) {
-      debugPrint('âŒ [DraftHomework] Exception: $e');
+      debugPrint('❌ [DraftHomework] Exception: $e');
       throw Exception('Failed to draft homework: $e');
     }
   }
@@ -653,27 +710,6 @@ class ApiService {
   //     "UploadedFiles": uploadedFiles.map((f) => {"FileName": f}).toList(),
   //   };
   //
-  //
-  //   debugPrint('ðŸ“¤ [TurnInHomework] Turning in homework...');
-  //   debugPrint('ðŸ“¦ Data: $data');
-  //
-  //   try {
-  //     final response = await _post(url, data);
-  //     debugPrint('âœ… [TurnInHomework] Response: $response');
-  //
-  //     if (response['success'] == true) {
-  //       debugPrint(
-  //           'âœ… [TurnInHomework] Success message: ${response['message']}');
-  //       return response['message'] ?? 'Homework turned in successfully!';
-  //     } else {
-  //       debugPrint('âŒ [TurnInHomework] Failed: ${response['message']}');
-  //       throw Exception(response['message'] ?? 'Failed to turn in homework.');
-  //     }
-  //   } catch (e) {
-  //     debugPrint('âŒ [TurnInHomework] Exception: $e');
-  //     throw Exception('Failed to turn in homework: $e');
-  //   }
-  // }
 
   Future<Map<String, dynamic>> turnInHomework({
     required String hwType,
@@ -696,7 +732,7 @@ class ApiService {
       "UploadedFiles": uploadedFiles.map((f) => {"FileName": f}).toList(),
     };
 
-    debugPrint('ðŸ“¦ [TurnInHomework] Payload â†’ $payload');
+    debugPrint('📦 [TurnInHomework] Payload → $payload');
 
     final response = await _dio.post(
       url,
@@ -704,7 +740,7 @@ class ApiService {
       options: Options(headers: {'Content-Type': 'application/json'}),
     );
 
-    debugPrint('âœ… [TurnInHomework] Response: ${response.data}');
+    debugPrint('✅ [TurnInHomework] Response: ${response.data}');
     return response.data;
   }
 
@@ -712,15 +748,15 @@ class ApiService {
   /// Returns the Dio Response<List<int>> so caller can inspect status and data.
   Future<Response<List<int>>> downloadFileBytes(String url) async {
     try {
-      debugPrint('ðŸ“¥ [downloadFileBytes] Downloading: $url');
+      debugPrint('📥 [downloadFileBytes] Downloading: $url');
       final response = await _dio.get<List<int>>(
         url,
         options: Options(responseType: ResponseType.bytes, followRedirects: true, validateStatus: (s) => s! < 500),
       );
-      debugPrint('ðŸ“¥ [downloadFileBytes] Status: ${response.statusCode}');
+      debugPrint('📥 [downloadFileBytes] Status: ${response.statusCode}');
       return response;
     } on DioException catch (e) {
-      debugPrint('âŒ [downloadFileBytes] Error: ${e.message}');
+      debugPrint('❌ [downloadFileBytes] Error: ${e.message}');
       rethrow;
     }
   }
@@ -742,7 +778,7 @@ class ApiService {
   //   required String fileName,
   // }) async {
   //   const String baseUrl = 'https://www.ivpsemi.in/CTA_Mob/v1/FileDelete';
-  //
+  // 
   //   try {
   //     final queryParams = {
   //       'HomeworkType': homeworkType.trim(),
@@ -751,10 +787,10 @@ class ApiService {
   //       'StudId': studId.toString(),
   //       'FileName': fileName,
   //     };
-  //
-  //     debugPrint('ðŸ—‘ï¸ [DeleteFile] Trying with GET method');
-  //     debugPrint('ðŸ—‘ï¸ [DeleteFile] Query Params: $queryParams');
-  //
+  // 
+  //     debugPrint('🗑️ [DeleteFile] Trying with GET method');
+  //     debugPrint('🗑️ [DeleteFile] Query Params: $queryParams');
+  // 
   //     final response = await _dio.get(
   //       baseUrl,
   //       queryParameters: queryParams,
@@ -764,7 +800,7 @@ class ApiService {
   //       ),
   //     );
   //
-  //     debugPrint('ðŸ“ Status: ${response.statusCode}');
+  //     debugPrint('📍 Status: ${response.statusCode}');
   //
   //     // Check for HTML error response
   //     if (response.data is String && response.data.toString().contains('<!DOCTYPE')) {
@@ -774,7 +810,7 @@ class ApiService {
   //       };
   //     }
   //
-  //     debugPrint('ðŸ“ Response: ${response.data}');
+  //     debugPrint('📍 Response: ${response.data}');
   //
   //     if (response.statusCode == 200) {
   //       if (response.data is Map) {
@@ -789,7 +825,7 @@ class ApiService {
   //     };
   //
   //   } catch (e) {
-  //     debugPrint('âŒ Error: $e');
+  //     debugPrint('❌ Error: $e');
   //     return {
   //       "success": false,
   //       "message": "Error: ${e.toString()}"
@@ -814,7 +850,7 @@ class ApiService {
       "FileName": fileName.trim(),
     };
 
-    debugPrint('ðŸ—‘ï¸ [DeleteFile] DELETE payload: $payload');
+    debugPrint('🗑️ [DeleteFile] DELETE payload: $payload');
 
     try {
       final response = await _dio.request(
@@ -831,8 +867,8 @@ class ApiService {
         ),
       );
 
-      debugPrint('ðŸ—‘ï¸ [DeleteFile] Status: ${response.statusCode}');
-      debugPrint('ðŸ—‘ï¸ [DeleteFile] Data: ${response.data}');
+      debugPrint('🗑️ [DeleteFile] Status: ${response.statusCode}');
+      debugPrint('🗑️ [DeleteFile] Data: ${response.data}');
 
       if (response.statusCode == 200 || response.statusCode == 204) {
         // If response.data is already a Map with success key, return it; otherwise create one.
@@ -853,7 +889,7 @@ class ApiService {
         "message": response.data?.toString() ?? 'Unexpected response'
       };
     } catch (e) {
-      debugPrint('âŒ [DeleteFile] Exception: $e');
+      debugPrint('❌ [DeleteFile] Exception: $e');
       return {"success": false, "message": "Exception: $e"};
     }
 
@@ -870,4 +906,3 @@ class ApiService {
 
 // ðŸŒ Global instance to access everywhere
 final apiService = ApiService();
-

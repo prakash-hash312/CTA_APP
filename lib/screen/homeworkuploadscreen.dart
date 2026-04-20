@@ -8,6 +8,7 @@ import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../colors/app_color.dart';
 import '../services/api_services.dart';
 import 'Homeworkscreen.dart';
@@ -213,6 +214,51 @@ class _HomeworkUploadScreenState extends State<HomeworkUploadScreen>
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(2)} KB';
     return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+  }
+
+  int _resolveSubmissionUserId() {
+    final userId = apiService.currentUserId;
+    if (userId != null && userId > 0) return userId;
+    return widget.studId;
+  }
+
+  String? _resolveServerFileUrl(Map<String, dynamic> file) {
+    final raw = (file['file_url'] ??
+            file['url'] ??
+            file['file_path'] ??
+            file['path'] ??
+            '')
+        .toString()
+        .trim();
+    if (raw.isEmpty) return null;
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+
+    final normalized = raw.replaceAll('\\', '/');
+    if (normalized.startsWith('/')) {
+      return 'https://www.ivpsemi.in$normalized';
+    }
+    if (normalized.toLowerCase().startsWith('cta_mob/')) {
+      return 'https://www.ivpsemi.in/$normalized';
+    }
+    return 'https://www.ivpsemi.in/CTA_Mob/$normalized';
+  }
+
+  Future<void> _openServerFile(Map<String, dynamic> file) async {
+    final url = _resolveServerFileUrl(file);
+    if (url == null || url.isEmpty) {
+      _showSnackBar('File link is not available.');
+      return;
+    }
+
+    try {
+      final uri = Uri.parse(url);
+      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!opened) {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      }
+    } catch (e) {
+      _showSnackBar('Failed to open file: $e');
+    }
   }
 
   Future<void> _fetchServerFiles() async {
@@ -870,7 +916,6 @@ class _HomeworkUploadScreenState extends State<HomeworkUploadScreen>
 
   Widget _buildServerFileItem(Map<String, dynamic> file) {
     final fileName = file['file_name'] ?? 'Unknown';
-    final filePath = file['file_path'] ?? '';
     final isAudio = _isServerAudioFile(fileName);
 
     return Container(
@@ -901,13 +946,7 @@ class _HomeworkUploadScreenState extends State<HomeworkUploadScreen>
             ),
           ),
           TextButton(
-            onPressed: () {
-              if (filePath.isNotEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('File path: $filePath')),
-                );
-              }
-            },
+            onPressed: () => _openServerFile(file),
             child: const Text('View', style: TextStyle(fontWeight: FontWeight.w800)),
           ),
           TextButton(
@@ -1032,13 +1071,18 @@ class _HomeworkUploadScreenState extends State<HomeworkUploadScreen>
       allUploadedNames.addAll(serverFileNames);
       await _cacheUploadedNames(allUploadedNames);
 
+      final submissionUserId = _resolveSubmissionUserId();
+      if (submissionUserId <= 0) {
+        throw Exception('User id not available. Please login again.');
+      }
+
       final draftResponse = await apiService.draftHomework(
         hwType: safeHwType,
         batch: widget.batch,
         weekId: widget.weekId,
         studId: widget.studId,
         hwAssignId: widget.hwAssignId,
-        userId: apiService.currentUserId!,
+        userId: submissionUserId,
         uploadedFiles: allUploadedNames,
       );
 
@@ -1127,13 +1171,18 @@ class _HomeworkUploadScreenState extends State<HomeworkUploadScreen>
       final uploadedFileNames =
       uploadedFiles.map((f) => f['file_name'].toString()).toList();
 
+      final submissionUserId = _resolveSubmissionUserId();
+      if (submissionUserId <= 0) {
+        throw Exception('User id not available. Please login again.');
+      }
+
       final response = await apiService.turnInHomework(
         hwType: safeHwType,
         batch: widget.batch,
         weekId: widget.weekId,
         studId: widget.studId,
         hwAssignId: widget.hwAssignId,
-        userId: apiService.currentUserId ?? 0,
+        userId: submissionUserId,
         uploadedFiles: uploadedFileNames,
       );
 
