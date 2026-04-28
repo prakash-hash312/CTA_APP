@@ -975,26 +975,11 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth >= 1100
-            ? 3
-            : constraints.maxWidth >= 700
-                ? 2
-                : 1;
-
-        return GridView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 18,
-            mainAxisSpacing: 18,
-            childAspectRatio: 0.9,
-          ),
-          itemCount: _sections.length,
-          itemBuilder: (_, i) => _buildSectionCard(_sections[i]),
-        );
-      },
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+      itemCount: _sections.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      itemBuilder: (_, i) => _buildSectionCard(_sections[i]),
     );
   }
 
@@ -1002,53 +987,42 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFD9DEE8)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE2E6EF)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(14)),
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            child: AspectRatio(
+              // Matches the book image proportions so it shows fully.
+              aspectRatio: 16 / 9,
               child: _SectionCover(section: section),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
             child: Text(
               section.title,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
                 color: Color(0xFF2B2B2B),
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Text(
-              section.description.isNotEmpty
-                  ? section.description
-                  : section.gradeName,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
-            ),
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
           Center(
             child: ElevatedButton(
               onPressed: () => _openSection(section),
@@ -1056,15 +1030,17 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
                 backgroundColor: const Color(0xFF8EA7D7),
                 foregroundColor: Colors.black87,
                 elevation: 0,
-                minimumSize: const Size(88, 34),
+                minimumSize: const Size(74, 28),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               ),
               child: const Text('Open'),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 4),
         ],
       ),
     );
@@ -1443,14 +1419,54 @@ class _SectionCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (section.coverUrl.isNotEmpty) {
-      return Image.network(
-        section.coverUrl,
+    // Use the same "book" image for all cards (matches the web UI).
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFE8F7C7), Color(0xFFBFEA8E), Color(0xFFEFF7D6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Image.asset(
+        'images/book_cover.png',
+        // Make the book cover the whole image section, anchored to the left.
         fit: BoxFit.cover,
+        alignment: Alignment.centerLeft,
+        filterQuality: FilterQuality.high,
         errorBuilder: (_, __, ___) => _fallback(),
-      );
-    }
-    return _fallback();
+      ),
+    );
+  }
+
+  Widget _loading() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFFE9F0FF),
+            const Color(0xFFF6F7FB),
+            Colors.blueGrey.shade50,
+          ],
+        ),
+      ),
+      child: Center(
+        child: Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.85),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.all(10),
+            child: CircularProgressIndicator(strokeWidth: 2.6),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _fallback() {
@@ -1460,11 +1476,7 @@ class _SectionCover extends StatelessWidget {
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFFD7F4A5),
-                Color(0xFFF9F5D6),
-                Color(0xFFCAE8A5)
-              ],
+              colors: [Color(0xFFE8F7C7), Color(0xFFBFEA8E), Color(0xFFEFF7D6)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -1472,22 +1484,39 @@ class _SectionCover extends StatelessWidget {
         ),
         Positioned.fill(
           child: Opacity(
-            opacity: 0.15,
+            opacity: 0.12,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  colors: [Colors.white, Colors.transparent],
+                  colors: const [Colors.white, Colors.transparent],
                   radius: 0.9,
-                  center: const Alignment(-0.6, -0.7),
+                  center: const Alignment(-0.4, -0.6),
                 ),
               ),
             ),
           ),
         ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            height: 34,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.brown.withOpacity(0.45),
+                  Colors.brown.withOpacity(0.12),
+                ],
+                begin: Alignment.bottomLeft,
+                end: Alignment.topRight,
+              ),
+            ),
+          ),
+        ),
         Center(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Image.asset('images/CTALogo.png', fit: BoxFit.contain),
+          child: Icon(
+            Icons.menu_book_rounded,
+            size: 62,
+            color: Colors.white.withOpacity(0.92),
           ),
         ),
       ],
