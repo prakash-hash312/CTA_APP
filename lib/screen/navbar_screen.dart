@@ -1,4 +1,3 @@
-// lib/screens/navbar_screen.dart
 
 
 import 'package:cta_design_prakash/screen/modifyprofile.dart';
@@ -37,7 +36,7 @@ bool _matchesMenuTarget(List<String> values, List<String> needles) {
   return false;
 }
 
-// --- Helper for Navigation ---
+
 Widget _getScreen(BuildContext context, {required String title, String route = ''}) {
   final candidates = [title, route];
   // 🟢 VIEW PROFILE
@@ -206,7 +205,7 @@ class _NavbarScreenState extends State<NavbarScreen> {
     }
   }
 
-  // Helper: group menu items into main/sub structure
+
   Map<int, List<MenuItem>> _groupSubMenusByMainId(List<MenuItem> items) {
     final Map<int, List<MenuItem>> map = {};
     for (final it in items) {
@@ -228,7 +227,7 @@ class _NavbarScreenState extends State<NavbarScreen> {
     return map;
   }
 
-  // Search/filter by entered text (search both main title and statusBar)
+  
   void _onSearchChanged(String q) {
     final query = q.trim().toLowerCase();
     if (query.isEmpty) {
@@ -251,7 +250,7 @@ class _NavbarScreenState extends State<NavbarScreen> {
     final mainMenuEntries = _mainMenuEntries(_filteredSubMenuList);
     final subMenusByMainId = _groupSubMenusByMainId(_filteredSubMenuList);
 
-    // Order main menu ids by menuOrder if available
+    
     final mainMenuOrderMap = <int, int>{};
     for (final it in _filteredSubMenuList) {
       if (it.subMenuId == 0) mainMenuOrderMap[it.mainMenuId] = it.menuOrder;
@@ -265,7 +264,7 @@ class _NavbarScreenState extends State<NavbarScreen> {
       child: SafeArea(
       child: Column(
           children: [
-            // Top profile header section
+            
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -284,10 +283,10 @@ class _NavbarScreenState extends State<NavbarScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // TOP ROW: avatar + name (no online indicator, no chevrons)
+                     
                       Row(
                         children: [
-                          // Avatar circle (you can swap with NetworkImage later)
+                          
                           Container(
                             width: 56,
                             height: 56,
@@ -302,7 +301,7 @@ class _NavbarScreenState extends State<NavbarScreen> {
                             ),
                           ),
                           const SizedBox(width: 14),
-                          // Name
+                          
                           Expanded(
                             child: Text(
                               displayUserName,
@@ -313,28 +312,12 @@ class _NavbarScreenState extends State<NavbarScreen> {
                               ),
                             ),
                           ),
-                          // small close icon (optional — keep if you want a close)
-                          // InkWell(
-                          //   onTap: () => Navigator.of(context).pop(),
-                          //   borderRadius: BorderRadius.circular(16),
-                          //   child: Container(
-                          //     width: 36,
-                          //     height: 36,
-                          //     alignment: Alignment.center,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.grey.shade100,
-                          //       borderRadius: BorderRadius.circular(12),
-                          //     ),
-                          //     child: const Icon(Icons.close, size: 18, color: Colors.black54),
-                          //   ),
-                          // ),
+                        
                         ],
                       ),
 
                       const SizedBox(height: 18),
 
-                      // Search field (keeps exactly the same visual style & behavior you already had)
-                      // Search box (reduced width)
                       Align(
                         alignment: Alignment.center,
                         child: Container(
@@ -379,9 +362,6 @@ class _NavbarScreenState extends State<NavbarScreen> {
 
                       const SizedBox(height: 16),
 
-                      // Search field
-                // Put this where your search field is
-
 
             // Menu list
             Expanded(
@@ -396,10 +376,7 @@ class _NavbarScreenState extends State<NavbarScreen> {
                     : ListView(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   children: [
-                    // Profile expandable section
-                    //_buildProfileSection(),
-
-                    // Other menu items
+                   
                     ...orderedMainMenuTiles(
                       orderedMainIds,
                       mainMenuEntries,
@@ -455,97 +432,6 @@ class _NavbarScreenState extends State<NavbarScreen> {
     );
   }
 
-  // Build Profile expandable section
-  // Widget _buildProfileSection() {
-  //   return Container(
-  //     margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-  //     decoration: BoxDecoration(
-  //       color: AppColors.kPastelBlue.withOpacity(0.08),
-  //       borderRadius: BorderRadius.circular(8),
-  //     ),
-  //     child: Column(
-  //       children: [
-  //         // Profile header
-  //         InkWell(
-  //           onTap: () {
-  //             setState(() {
-  //               _profileExpanded = !_profileExpanded;
-  //             });
-  //           },
-  //           borderRadius: BorderRadius.circular(8),
-  //           child: Padding(
-  //             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-  //             child: Row(
-  //               children: [
-  //                 Icon(
-  //                   Icons.person_outline,
-  //                   color: AppColors.kDarkBlue,
-  //                   size: 20,
-  //                 ),
-  //                 const SizedBox(width: 12),
-  //                 const Expanded(
-  //                   child: Text(
-  //                     'Profile',
-  //                     style: TextStyle(
-  //                       fontSize: 15,
-  //                       fontWeight: FontWeight.w500,
-  //                       color: Colors.black87,
-  //                     ),
-  //                   ),
-  //                 ),
-  //                 Icon(
-  //                   _profileExpanded
-  //                       ? Icons.keyboard_arrow_down
-  //                       : Icons.keyboard_arrow_right,
-  //                   color: AppColors.kDarkBlue,
-  //                   size: 20,
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //
-  //         // Profile options
-  //         if (_profileExpanded) ...[
-  //           _buildProfileOption(
-  //             'View My Profile',
-  //                 () {
-  //               Navigator.of(context).pop();
-  //               Navigator.of(context).push(
-  //                 MaterialPageRoute(
-  //                   builder: (_) => _getScreen(context, 'View My Profile'),
-  //                 ),
-  //               );
-  //             },
-  //           ),
-  //           _buildProfileOption(
-  //             'Modify My Profile',
-  //                 () {
-  //               Navigator.of(context).pop();
-  //               Navigator.of(context).push(
-  //                 MaterialPageRoute(
-  //                   builder: (_) => _getScreen(context, 'Modify My Profile'),
-  //                 ),
-  //               );
-  //             },
-  //           ),
-  //           _buildProfileOption(
-  //             'Change Password',
-  //                 () {
-  //               Navigator.of(context).pop();
-  //               Navigator.of(context).push(
-  //                 MaterialPageRoute(
-  //                   builder: (_) => _getScreen(context, 'Change Password'),
-  //                 ),
-  //               );
-  //             },
-  //           ),
-  //         ],
-  //       ],
-  //     ),
-  //   );
-  // }
-
   // Helper method to build profile options
   Widget _buildProfileOption(String title, VoidCallback onTap) {
     return InkWell(
@@ -582,10 +468,9 @@ class _NavbarScreenState extends State<NavbarScreen> {
       final title = mainEntry?.mainMenuTitle ?? 'Menu';
       final sub = subMenusByMainId[mainId] ?? [];
 
-      // Get appropriate icon based on menu title
+     
       IconData menuIcon = _getMenuIcon(title, alt: mainEntry?.routePath);
 
-      // If no submenus, render a simple ListTile
       if (sub.isEmpty) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -621,7 +506,7 @@ class _NavbarScreenState extends State<NavbarScreen> {
         );
       }
 
-      // Render an ExpansionTile for main menu with sub items
+    
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         child: Theme(
@@ -675,79 +560,47 @@ class _NavbarScreenState extends State<NavbarScreen> {
     }).toList();
   }
 
-  // Helper to get icon based on menu title
-  // IconData _getMenuIcon(String title) {
-  //   final lowerTitle = title.toLowerCase();
-  //
-  //   if (lowerTitle.contains('user') || lowerTitle.contains('profile')) {
-  //     return Icons.person_outline;
-  //   } else if (lowerTitle.contains('report')) {
-  //     return Icons.description_outlined;
-  //   } else if (lowerTitle.contains('new report card')) {
-  //     return Icons.share;
-  //   } else if (lowerTitle.contains('resource')) {
-  //     return Icons.folder_outlined;
-  //   } else if (lowerTitle.contains('card')) {
-  //     return Icons.credit_card_outlined;
-  //   } else if (lowerTitle.contains('email') || lowerTitle.contains('mail')) {
-  //     return Icons.mail_outline;
-  //   } else if (lowerTitle.contains('parent') || lowerTitle.contains('access')) {
-  //     return Icons.people_outline;
-  //   } else if (lowerTitle.contains('help')) {
-  //     return Icons.help_outline;
-  //   } else if (lowerTitle.contains('magazine')) {
-  //     return Icons.book_outlined;
-  //   } else if (lowerTitle.contains('hscp')) {
-  //     return Icons.medical_services_outlined;
-  //   } else {
-  //     return Icons.circle_outlined;
-  //   }
-  //}
+ 
 
   IconData _getMenuIcon(String title, {String? alt}) {
-    // alt: optional alternate string (e.g. statusBar) if you want to try multiple fields
+    
     final candidates = <String>[];
     if (title.isNotEmpty) candidates.add(title);
     if (alt != null && alt.isNotEmpty) candidates.add(alt);
 
-    // Normalize: lowercase + trim
     final lowerCandidates = candidates.map((s) => s.toLowerCase().trim()).toList();
 
-    // DEBUG: print what we're receiving (watch console)
-    // Example: use this to see the exact strings coming from the API.
-    // Remove or comment out in production.
+   
     for (var c in lowerCandidates) {
       debugPrint('[_getMenuIcon] candidate -> "$c"');
     }
 
-    // Helper to check any candidate
+    
     bool anyContains(String needle) =>
         lowerCandidates.any((c) => c.contains(needle));
     bool anyEquals(String needle) =>
         lowerCandidates.any((c) => c == needle);
 
-    // ---- Specific checks first (exact or distinctive) ----
-    // exact match for "new report card"
     if (anyContains('new report card') || anyContains('new reportcard') || anyContains('report card new')) {
       return Icons.workspace_premium_outlined;
     }
 
-    // exact "view profile" or "view my profile" OR titles that clearly indicate profile
+    
     if (anyContains('view my profile') || anyContains('view profile') || anyEquals('profile') || anyContains('my profile')) {
-      return Icons.person; // distinct profile icon
+      return Icons.person; 
     }
 
-    // main "user" menu (less specific)
+  
     if (anyEquals('user') || anyContains('user menu') || anyContains('user')) {
       return Icons.person_pin_outlined;
     }
 
-    // reports (generic)
+   
     if (anyContains('report') && !anyContains('report card')) {
       return Icons.description_outlined;
     }
 
-    // resources, cards, email, parent, help, magazine, hscp
+   
     if (anyContains('resource')) return Icons.folder_outlined;
     if (anyContains('card')) return Icons.credit_card_outlined;
     if (anyContains('email') || anyContains('mail')) return Icons.mail_outline;
@@ -756,7 +609,7 @@ class _NavbarScreenState extends State<NavbarScreen> {
     if (anyContains('magazine')) return Icons.book_outlined;
     if (anyContains('hscp')) return Icons.medical_services_outlined;
 
-    // default
+  
     return Icons.circle_outlined;
   }
 

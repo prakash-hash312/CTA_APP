@@ -1,4 +1,4 @@
-// lib/screens/home_screen.dart
+
 
 import 'package:flutter/material.dart';
 
@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final title =
             hw['hw_subject']?.toString() ?? hw['week_name']?.toString() ?? 'Homework';
 
-        // Use stud_name for the dashboard subject display when available.
+       
         final studName = (hw['stud_name'] ?? '').toString().trim();
         final subjectForCard =
         studName.isNotEmpty ? 'Name: $studName' : (hw['hw_name'] ?? '').toString();
@@ -66,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
         final taskItem = _TaskItem(
           title: title,
-          subject: subjectForCard, // student name (or fallback)
+          subject: subjectForCard, 
           dueDate: dueDate,
           status: displayStatus,
           hwData: hw,
@@ -189,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
       
                     const SizedBox(height: 20),
       
-                    // Segmented control (pill)
+                   
                     Center(
                       child: Container(
                         constraints: const BoxConstraints(maxWidth: 560),
@@ -277,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             : Column(
                           children: (_selectedTab == 0 ? _pendingTasks : _completedTasks)
                               .map((task) => _TaskCard(task: task, onViewDetails: () {
-                            // navigate or open homework details
+                           
                             debugPrint('📖 View homework: ${task.title}');
                           }))
                               .toList(),
@@ -323,7 +323,7 @@ class _TaskCard extends StatelessWidget {
     final dueDateStr =
         '${task.dueDate.year}-${task.dueDate.month.toString().padLeft(2, '0')}-${task.dueDate.day.toString().padLeft(2, '0')}';
 
-    // Choose stripe color by status or subject (you can customize)
+   
     Color stripeColor = Colors.blue;
     Color badgeBg = const Color(0xFFFFF4D1);
     Color badgeText = Colors.orange.shade900;
@@ -371,7 +371,7 @@ class _TaskCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // show subject (student name or fallback) as-is
+                     
                       Text(task.subject, style: const TextStyle(fontSize: 12, color: Color(0xFF9E9E9E), fontWeight: FontWeight.w700)),
                       const SizedBox(height: 6),
 
@@ -398,9 +398,6 @@ class _TaskCard extends StatelessWidget {
                 ),
 
                 const SizedBox(width: 8),
-
-                // right circular action
-                // Hide the visible background for LATE tasks while preserving layout spacing
                 if (!isLate)
                   InkResponse(
                     onTap: onViewDetails,

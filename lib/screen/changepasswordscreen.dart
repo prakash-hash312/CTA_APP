@@ -1,4 +1,4 @@
-// lib/screens/change_password_screen.dart
+
 
 import 'package:flutter/material.dart';
 import '../colors/app_color.dart';
@@ -134,12 +134,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // We wrap in SafeArea and center card width to look like a panel in the screenshot
     return SafeArea(
       child: Scaffold(
         backgroundColor: const Color(0xFFE9F0FF),
         appBar: AppBar(
-          elevation: 0, // remove default shadow
+          elevation: 0, 
           title: Text(
             'Change Password',
             style: TextStyle(
@@ -158,14 +157,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         return SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: constraints.maxHeight, // ✅ enables vertical centering
+              minHeight: constraints.maxHeight, 
             ),
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
-                    maxWidth: 520, // card width
+                    maxWidth: 520,
                   ),
                   child: Card(
                     elevation: 6,
@@ -179,7 +178,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       child: Form(
                         key: _formKey,
                         child: Column(
-                          mainAxisSize: MainAxisSize.min, // 🔑 important
+                          mainAxisSize: MainAxisSize.min, 
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildPasswordField(

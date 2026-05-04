@@ -33,7 +33,7 @@ class _HomeWorkScreenState extends State<HomeWorkScreen> {
         children: [
           // LABEL COLUMN (fixed width → table-like alignment)
           SizedBox(
-            width: 120, // 👈 controls alignment (adjust if needed)
+            width: 120, 
             child: Text(
               label,
               style: const TextStyle(
@@ -66,18 +66,17 @@ class _HomeWorkScreenState extends State<HomeWorkScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFE9F0FF),
         appBar: AppBar(
-          elevation: 0, // r`emove default shadow
+          elevation: 0, 
           title: Text('Homework Upload', style: TextStyle( fontWeight: FontWeight.w500),),
           centerTitle: true,
           backgroundColor: AppColors.appbarblue,
           foregroundColor: Colors.white,
-          //iconTheme: IconThemeData(color: AppColors.kDarkText),
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1.0),
             child: Divider(
               height: 1,
               thickness: 1,
-              color: Color(0xFFCAC5C5), // ← bottom border color
+              color: Color(0xFFCAC5C5), 
             ),
           ),
         ),
@@ -147,7 +146,7 @@ class _HomeWorkScreenState extends State<HomeWorkScreen> {
                     ),
                     child: Column(
                       children: [
-                        // Header with blue background and rounded top
+                       
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(14),
@@ -184,12 +183,7 @@ class _HomeWorkScreenState extends State<HomeWorkScreen> {
                               bottomRight: Radius.circular(16),
                             ),
                           ),
-                          // decoration: const BoxDecoration(
-                          //   color: Color(0xFFD9E8F7),   // SAME BLUE AS DETAIL SCREEN
-                          //   borderRadius: BorderRadius.only(
-                          //     bottomLeft: Radius.circular(16),
-                          //     bottomRight: Radius.circular(16),
-                          //   ),
+                        
                           // ),
       
       
@@ -216,11 +210,7 @@ class _HomeWorkScreenState extends State<HomeWorkScreen> {
                                   width: double.infinity,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      // gradient: const LinearGradient(
-                                      //   colors: [Color(0xFF2B57A0), Color(0xFF13345F)],
-                                      //   begin: Alignment.topLeft,
-                                      //   end: Alignment.bottomRight,
-                                      // ),
+                                    
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: ElevatedButton(

@@ -1,4 +1,4 @@
-// login_screen.dart
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../colors/app_color.dart';
@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return; // 🚫 stop if invalid
+    if (!_formKey.currentState!.validate()) return; 
 
     setState(() {
       _isLoading = true;
@@ -40,11 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final username = _usernameController.text.trim();
       final password = _passwordController.text.trim();
 
-      // 🔑 FIX: Logout/clear any existing session BEFORE logging in.
-      // This ensures stale stud_id / user_id from a previous account
-      // does not bleed into the new login session. Without this, switching
-      // accounts (e.g. from ita_17399 to ita_41974) would silently reuse
-      // the old student ID and show the wrong (or no) homework data.
+      
       await apiService.logout();
 
       // 🧠 Call your API service login

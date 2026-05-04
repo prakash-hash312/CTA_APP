@@ -54,16 +54,7 @@ class _ViewMyProfileScreenState extends State<ViewMyProfileScreen> {
             "View My Profile",
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
           ),
-          // actions: [
-          //   IconButton(
-          //     icon: const Icon(Icons.edit),
-          //     onPressed: () {
-          //       _profileFuture.then((user) {
-          //         _openModifyProfile(user);
-          //       });
-          //     },
-          //   ),
-          // ],
+          
         ),
       
         drawer: const NavbarScreen(),

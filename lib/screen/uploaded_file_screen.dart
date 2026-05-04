@@ -102,34 +102,7 @@ class _UploadedFilesScreenState extends State<UploadedFilesScreen> {
     }
   }
 
-  // String _getFullFileUrl(String rawPath) {
-  //   if (rawPath.isEmpty) return '';
-  //
-  //   // Clean up whitespace
-  //   final cleanPath = rawPath.trim();
-  //
-  //   debugPrint('🔍 DEBUG _getFullFileUrl:');
-  //   debugPrint('   Input: $cleanPath');
-  //
-  //   // Handle paths like "~/CTA_homework/..." or "CTA_homework/..."
-  //   String pathToUse = cleanPath;
-  //
-  //   if (cleanPath.startsWith('~/')) {
-  //     pathToUse = cleanPath.substring(2); // Remove ~/ prefix
-  //   }
-  //
-  //   // Remove leading slashes
-  //   while (pathToUse.startsWith('/')) {
-  //     pathToUse = pathToUse.substring(1);
-  //   }
-  //
-  //   final fullUrl = 'https://www.ivpsemi.in/$pathToUse';
-  //
-  //   debugPrint('   Output: $fullUrl');
-  //   debugPrint('');
-  //
-  //   return fullUrl;
-  // }
+  
   String _getFullFileUrl(String rawPath) {
     if (rawPath.isEmpty) return '';
 
@@ -146,18 +119,11 @@ class _UploadedFilesScreenState extends State<UploadedFilesScreen> {
       pathWithoutTilde = pathWithoutTilde.substring(1);
     }
 
-    // TRY THESE FORMATS (uncomment the one that works):
-
-    // Option 1: Direct path conversion
-    // final fullUrl = 'https://www.ivpsemi.in/$pathWithoutTilde';
-
-    // Option 2: Remove the student-specific folders (3/19233)
-    // This assumes files are stored in: /CTA_homework/2025/filename
+    
     List<String> parts = pathWithoutTilde.split('/');
-    // parts = ['CTA_homework', '2025', '3', '19233', 'filename.ext']
-    // We want: ['CTA_homework', '2025', 'filename.ext']
+   
     if (parts.length >= 5) {
-      parts = [parts[0], parts[1], parts.last]; // Keep only CTA_homework/2025/filename
+      parts = [parts[0], parts[1], parts.last]; 
     }
     final fullUrl = 'https://www.ivpsemi.in/${parts.join('/')}';
 
@@ -174,7 +140,7 @@ class _UploadedFilesScreenState extends State<UploadedFilesScreen> {
     super.initState();
     _loadTurnedInFlag();
     _filesFuture = _initializeAndLoad().then((files) {
-      // DEBUG: Print the merged response
+      
       debugPrint('');
       debugPrint('========== MERGED FILES (Server + Cache) ==========');
       for (var file in files) {
@@ -209,10 +175,7 @@ class _UploadedFilesScreenState extends State<UploadedFilesScreen> {
     });
   }
 
-  // void _showSnackBar(String message) {
-  //   if (!mounted) return;
-  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  // }
+  
 
   void _showSnackBar(String message) {
     if (mounted) {
@@ -233,24 +196,24 @@ class _UploadedFilesScreenState extends State<UploadedFilesScreen> {
     });
 
     try {
-      // Get the directory to save the file
+      
       final directory = await getApplicationDocumentsDirectory();
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
 
-      // Check if file already exists locally
+      
       if (await file.exists()) {
-        // File exists, open it directly
+       
         final result = await OpenFilex.open(filePath);
         if (result.type != ResultType.done) {
           _showSnackBar('❌ Could not open file: ${result.message}');
         }
       } else {
-        // Download the file
+       
         final response = await http.get(Uri.parse(fileUrl));
 
         if (response.statusCode == 200) {
-          // Save file to local storage
+         
           await file.writeAsBytes(response.bodyBytes);
 
           // Open the file
@@ -367,8 +330,7 @@ class _UploadedFilesScreenState extends State<UploadedFilesScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            // ORIGINAL PROBLEMATIC CODE (in View button):
-                            // Add this debugging code to see what URL is being generated:
+                           
 
                             TextButton.icon(
                               onPressed: () {
@@ -439,10 +401,9 @@ class _UploadedFilesScreenState extends State<UploadedFilesScreen> {
                                             // Close loading dialog
                                             if (mounted) Navigator.pop(context);
 
-                                            // Check response
-    // after getting `response` from apiService.deleteHomeworkFile(...)
+                                            
     if (response['success'] == true) {
-    // refresh list from server rather than removing locally
+   
     await _refreshFiles();
     _showSnackBar('✅ ${response['message'] ?? 'File deleted successfully'}');
     } else {

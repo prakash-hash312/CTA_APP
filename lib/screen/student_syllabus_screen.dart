@@ -1,14 +1,12 @@
 ﻿
-// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_services.dart';
 
-// ══════════════════════════════════════════════════════════════════════════════
-// MODELS
-// ══════════════════════════════════════════════════════════════════════════════
+
 
 class _Topic {
   final int id;
@@ -96,9 +94,7 @@ class _Lesson {
       );
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// CACHE
-// ══════════════════════════════════════════════════════════════════════════════
+
 
 class _Cache {
   static final Map<int, Future<List<Map<String, dynamic>>>> grade = {};
@@ -114,9 +110,6 @@ class _Cache {
       map.putIfAbsent(key, loader);
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// URL UTILITIES
-// ══════════════════════════════════════════════════════════════════════════════
 
 bool _isHttp(String v) {
   final s = v.trim().toLowerCase();
@@ -481,9 +474,8 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
   }
 
   bool get _useHscpSectionView {
-    // For some student accounts TopicInfo returns empty (API limitation/data),
-    // but GradeInfo still returns valid "sections" with cover images.
-    // In that case show the section grid UI (like stud_id=17399).
+    
+   
     const hscpSectionStudIds = {17399, 14618, 20674};
     return (_activeStudId != null && hscpSectionStudIds.contains(_activeStudId)) ||
         (_sections.isNotEmpty && _topics.isEmpty);
@@ -544,14 +536,7 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
     });
 
     try {
-      // ── STEP 1: Resolve student ID ─────────────────────────────────────────
-      // 🔑 FIX: For accounts like ita_41974 whose ViewProfile API returns 500,
-      // ensureCurrentStudentId() returns null. Instead of throwing immediately
-      // we try 4 fallback levels before giving up:
-      //   a) ensureCurrentStudentId()  — tries profile + homework APIs
-      //   b) currentStudentId          — already-cached value from session
-      //   c) currentUserId             — the id from the login response
-      //   d) StudentHomeWork API       — confirm userId works as stud_id
+      
 
       int? studId = await apiService.ensureCurrentStudentId();
 
@@ -599,8 +584,6 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
       );
       debugPrint('📚 GradeInfo: ${gradeRows.length} rows');
 
-      // 🔑 FIX: If GradeInfo is empty for resolved studId, retry with
-      // currentUserId — some accounts store syllabus under a different id.
       if (gradeRows.isEmpty) {
         final altId = apiService.currentUserId;
         if (altId != null && altId > 0 && altId != studId) {
@@ -673,9 +656,7 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
           loader: () =>
               apiService.fetchSyllabusTopicInfo(mainId: mainId, studId: studId!),
         );
-        // Some accounts store topics under a different identifier than the
-        // stud_id used for GradeInfo. If TopicInfo comes back empty, retry with
-        // user/emp ids (similar to GradeInfo fallback).
+       
         if (topicRows.isEmpty) {
           final altCandidates = <int>{
             if (apiService.currentUserId != null && apiService.currentUserId! > 0)
@@ -1191,9 +1172,7 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
     );
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // RIGHT PANE
-  // ══════════════════════════════════════════════════════════════════════════
+  
 
   Widget _buildRightPane() {
     final lesson = _currentLesson;
@@ -1210,10 +1189,7 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
         sky: _sky);
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // BUILD
-  // ══════════════════════════════════════════════════════════════════════════
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1282,9 +1258,6 @@ class _StudentSyllabusScreenState extends State<StudentSyllabusScreen> {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// LESSON CONTENT WIDGET
-// ══════════════════════════════════════════════════════════════════════════════
 
 class _LessonContent extends StatelessWidget {
   final _Lesson lesson;
@@ -1419,7 +1392,7 @@ class _SectionCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use the same "book" image for all cards (matches the web UI).
+  
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -1430,7 +1403,7 @@ class _SectionCover extends StatelessWidget {
       ),
       child: Image.asset(
         'images/book_cover.png',
-        // Make the book cover the whole image section, anchored to the left.
+        
         fit: BoxFit.cover,
         alignment: Alignment.centerLeft,
         filterQuality: FilterQuality.high,

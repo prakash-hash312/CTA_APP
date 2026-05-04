@@ -280,7 +280,7 @@ class _ModifyProfileScreenState extends State<ModifyProfileScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFE9F0FF),
         appBar: AppBar(
-          elevation: 0, // remove default shadow
+          elevation: 0,
           title: Text(
             'Modify My Profile',
             style: TextStyle(fontWeight: FontWeight.w500),

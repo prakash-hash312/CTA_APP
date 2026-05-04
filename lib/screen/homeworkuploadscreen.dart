@@ -49,8 +49,7 @@ class _HomeworkUploadScreenState extends State<HomeworkUploadScreen>
   String get _turnedInPrefsKey =>
       'turned_in_${widget.studId}_${widget.hwAssignId}_${widget.weekId}';
 
-  // 🔑 FIX: Track whether student ID resolution failed so we can show a
-  // meaningful error message instead of silently showing an empty screen.
+ 
   bool _studIdResolutionFailed = false;
 
   List<File> _uploadedFiles = [];
@@ -98,7 +97,6 @@ class _HomeworkUploadScreenState extends State<HomeworkUploadScreen>
   bool _showRecordingDialog = false;
   bool _recordingComplete = false;
 
-  // ------------------- UI HELPERS (ONLY STYLING) -------------------
   BoxDecoration _cardDecoration() {
     return BoxDecoration(
       color: Colors.white,
@@ -209,7 +207,7 @@ class _HomeworkUploadScreenState extends State<HomeworkUploadScreen>
     );
   }
 
-  // ------------------- LOGIC (UNCHANGED) -------------------
+  
   bool _isAudioFile(File f) {
     final name = f.path.split('/').last;
     final ext = name.contains('.') ? name.split('.').last.toLowerCase() : '';
@@ -251,15 +249,13 @@ class _HomeworkUploadScreenState extends State<HomeworkUploadScreen>
   int _resolveSubmissionUserId() =>
       apiService.currentUserId ?? _activeStudId ?? widget.studId;
 
-  // 🔑 FIX: _resolveActiveStudId now prefers the successfully resolved
-  // _activeStudId over falling back directly to widget.studId (which is
-  // the stud_id passed by the parent screen and could be 0 for some users).
+ 
   int _resolveActiveStudId() {
     final resolved = _activeStudId ??
         apiService.currentStudentId ??
         apiService.currentUserId;
     if (resolved != null && resolved > 0) return resolved;
-    // Last resort: use widget.studId only if it's positive
+   
     if (widget.studId > 0) return widget.studId;
     debugPrint('⚠️ [HomeworkUpload] _resolveActiveStudId returned 0!');
     return 0;
@@ -308,8 +304,7 @@ class _HomeworkUploadScreenState extends State<HomeworkUploadScreen>
   }
 
   Future<void> _fetchServerFiles() async {
-    // 🔑 FIX: Don't attempt to fetch server files if we don't have a valid
-    // student ID — it would silently return empty or hit a wrong endpoint.
+    
     final activeId = _resolveActiveStudId();
     if (activeId <= 0) {
       debugPrint('⚠️ [fetchServerFiles] Skipped — no valid stud_id');
@@ -421,10 +416,7 @@ class _HomeworkUploadScreenState extends State<HomeworkUploadScreen>
   }
 
   Future<void> _initializeScreen() async {
-    // 🔑 FIX: Resolve the active student ID. If resolution returns null
-    // (meaning none of the fallback strategies worked for this account),
-    // we mark the screen as failed and show an error — instead of
-    // silently using the wrong ID (user_id) and fetching empty data.
+   
     final resolvedStudId = await apiService.resolveActiveStudentId();
 
     if (!mounted) return;
@@ -1365,9 +1357,8 @@ class _HomeworkUploadScreenState extends State<HomeworkUploadScreen>
   // ------------------- MAIN BUILD -------------------
   @override
   Widget build(BuildContext context) {
-    // 🔑 FIX: If student ID resolution failed, show a clear error screen
-    // instead of an empty upload screen with no explanation. Previously
-    // the screen would appear but all API calls would silently fail.
+   
+  
     if (_studIdResolutionFailed) {
       return SafeArea(
         child: Scaffold(

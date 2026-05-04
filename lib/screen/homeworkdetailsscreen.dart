@@ -73,7 +73,7 @@ class _HomeworkDetailScreenState extends State<HomeworkDetailScreen> {
       onTap: () => _showFullDescription(plainText),
       child: Container(
         width: double.infinity,
-        height: MediaQuery.of(context).size.height * 0.15, // ✅ FIXED SIZE
+        height: MediaQuery.of(context).size.height * 0.15,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -89,7 +89,7 @@ class _HomeworkDetailScreenState extends State<HomeworkDetailScreen> {
         ),
         child: Text(
           plainText,
-          maxLines: 6,                 // ✅ PREVIEW ONLY
+          maxLines: 6,                 
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             fontSize: 14,
@@ -120,7 +120,7 @@ class _HomeworkDetailScreenState extends State<HomeworkDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // drag handle
+                 
                   Center(
                     child: Container(
                       width: 40,
@@ -212,7 +212,7 @@ class _HomeworkDetailScreenState extends State<HomeworkDetailScreen> {
     );
   }
 
-  // ---------------- UI ----------------
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -237,7 +237,7 @@ class _HomeworkDetailScreenState extends State<HomeworkDetailScreen> {
           ),
         ),
       
-        // ✅ BODY uses FutureBuilder (same as you did)
+       
         body: FutureBuilder<List<Map<String, dynamic>>>(
           future: _detailFuture,
           builder: (context, snap) {
@@ -260,7 +260,7 @@ class _HomeworkDetailScreenState extends State<HomeworkDetailScreen> {
       
             final hw = snap.data!.first;
       
-            // ✅ Due Date handling (your logic kept)
+           
             String dueDateStr = '-';
             final raw = hw['due_date'];
             if (raw != null) {
@@ -289,7 +289,7 @@ class _HomeworkDetailScreenState extends State<HomeworkDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 🔵 TOP GRADIENT CARD (✅ now includes SUBJECT)
+                   
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
@@ -302,13 +302,6 @@ class _HomeworkDetailScreenState extends State<HomeworkDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Text(
-                          //   hw['week_name']?.toString() ?? 'Week',
-                          //   style: const TextStyle(
-                          //     color: Colors.white70,
-                          //     fontSize: 14,
-                          //   ),
-                          // ),
                           const SizedBox(height: 6),
                           if (subject.isNotEmpty)
                             Text(
